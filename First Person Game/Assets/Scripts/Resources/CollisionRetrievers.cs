@@ -15,7 +15,7 @@ public static class CollisionRetrievers
     /// <param name="distance">The distance the <see cref="Collider"/> will move. 
     /// Can easily be gotten by using <see cref="Vector3.magnitude"/> with the difference between the target and starting locations</param>
     /// <returns></returns>
-    public static RaycastHit[] GetCollisions(Transform colliderObject, Collider collider, Vector3 direction, float distance)
+    public static RaycastHit[] GetCollisions(Vector3 colliderObject, Collider collider, Vector3 direction, float distance)
     {
         if (collider is CapsuleCollider)
         {
@@ -35,17 +35,38 @@ public static class CollisionRetrievers
     /// <param name="distance">The distance the <see cref="CapsuleCollider"/> will move. 
     /// Can easily be gotten by using <see cref="Vector3.magnitude"/> with the difference between the target and starting locations</param>
     /// <returns></returns>
-    public static RaycastHit[] GetCapsuleCollisions(Transform colliderObject, CapsuleCollider collider, Vector3 direction, float distance)
+    public static RaycastHit[] GetCapsuleCollisions(Vector3 colliderObject, CapsuleCollider collider, Vector3 direction, float distance)
     {
-        RaycastHit[] hits;
-
         Vector3 pointDistance = Vector3.up * (collider.height / 2 - collider.radius);
-        Vector3 colliderTruePosition = colliderObject.position + collider.center;
+        Vector3 colliderTruePosition = colliderObject + collider.center;
 
         Vector3 point1 = colliderTruePosition + pointDistance;
         Vector3 point2 = colliderTruePosition - pointDistance;
 
-        hits = Physics.CapsuleCastAll(point1, point2, collider.radius, direction, distance);
+        RaycastHit[] hits = Physics.CapsuleCastAll(point1, point2, collider.radius, direction, distance);
+
+        return hits;
+    }
+
+    public static Collider[] GetColliderOverlap(Vector3 colliderObject, Collider collider)
+    {
+        if (collider is CapsuleCollider)
+        {
+            return GetCapsuleOverlap(colliderObject, collider as CapsuleCollider);
+        }
+
+        return new Collider[0];
+    }
+
+    public static Collider[] GetCapsuleOverlap(Vector3 colliderObject, CapsuleCollider collider)
+    {
+        Vector3 pointDistance = Vector3.up * (collider.height / 2 - collider.radius);
+        Vector3 colliderTruePosition = colliderObject + collider.center;
+
+        Vector3 point1 = colliderTruePosition + pointDistance;
+        Vector3 point2 = colliderTruePosition - pointDistance;
+
+        Collider[] hits = Physics.OverlapCapsule(point1, point2, collider.radius);
 
         return hits;
     }

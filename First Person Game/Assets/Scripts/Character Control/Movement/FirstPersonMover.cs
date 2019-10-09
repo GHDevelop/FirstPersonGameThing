@@ -51,7 +51,7 @@ public class FirstPersonMover : BaseMover
         }
     }
 
-    [Header("Properties")]
+    [Header("Fist Person Mover Properties")]
 
     [Tooltip("All the speeds used by this mover"),
         SerializeField] private FirstPersonMovementSpeedSet _speeds;
@@ -86,7 +86,7 @@ public class FirstPersonMover : BaseMover
     protected virtual float GetForwardVelocity(Vector3 input)
     {
         float acceleration = CalculateAbnormalAcceleration(input.z, MovementSpeed.z, Speeds.ForwardSpeed.Acceleration, Speeds.BackwardSpeed.Acceleration, Speeds.ForwardSpeed.Deceleration, Speeds.BackwardSpeed.Deceleration);
-        float velocity = CalculateVelocityFromAcceleration(acceleration, MovementSpeed.z, -Speeds.BackwardSpeed.MaxSpeed, Speeds.ForwardSpeed.MaxSpeed);
+        float velocity = CalculateVelocityFromAcceleration(input.z, acceleration, MovementSpeed.z, -Speeds.BackwardSpeed.MaxSpeed, Speeds.ForwardSpeed.MaxSpeed);
 
         return velocity;
     }
@@ -101,7 +101,7 @@ public class FirstPersonMover : BaseMover
     protected virtual float GetSidewaysVelocity(Vector3 input)
     {
         float acceleration = CalculateNormalAcceleration(input.x, MovementSpeed.x, Speeds.SidewaysSpeed.Acceleration, Speeds.SidewaysSpeed.Deceleration);
-        float velocity = CalculateVelocityFromAcceleration(acceleration, MovementSpeed.x, -Speeds.SidewaysSpeed.MaxSpeed, Speeds.SidewaysSpeed.MaxSpeed);
+        float velocity = CalculateVelocityFromAcceleration(input.x, acceleration, MovementSpeed.x, -Speeds.SidewaysSpeed.MaxSpeed, Speeds.SidewaysSpeed.MaxSpeed);
 
         return velocity;
     }
@@ -116,7 +116,7 @@ public class FirstPersonMover : BaseMover
     protected virtual float GetVerticalVelocity(Vector3 input)
     {
         float acceleration = CalculateNormalAcceleration(input.y, MovementSpeed.y, Speeds.VerticalSpeed.Acceleration, Speeds.VerticalSpeed.Deceleration);
-        float velocity = CalculateVelocityFromAcceleration(acceleration, MovementSpeed.y, -Speeds.VerticalSpeed.MaxSpeed, Speeds.VerticalSpeed.MaxSpeed);
+        float velocity = CalculateVelocityFromAcceleration(input.y, acceleration, MovementSpeed.y, -Speeds.VerticalSpeed.MaxSpeed, Speeds.VerticalSpeed.MaxSpeed);
 
         return velocity;
     }
@@ -129,9 +129,10 @@ public class FirstPersonMover : BaseMover
     /// <param name="minSpeed"></param>
     /// <param name="maxSpeed"></param>
     /// <returns></returns>
-    protected virtual float CalculateVelocityFromAcceleration(float acceleration, float currentSpeed, float minSpeed, float maxSpeed)
+    protected virtual float CalculateVelocityFromAcceleration(float inputAxis, float acceleration, float currentSpeed, float minSpeed, float maxSpeed)
     {
-        return Mathf.Clamp(currentSpeed + acceleration, minSpeed, maxSpeed);
+        float speedCapMultiplier = inputAxis != 0 ? Mathf.Abs(inputAxis) : 1;
+        return Mathf.Clamp(currentSpeed + acceleration, minSpeed * speedCapMultiplier, maxSpeed * speedCapMultiplier);
     }
 
     /// <summary>

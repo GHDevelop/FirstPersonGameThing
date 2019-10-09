@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
-
 public abstract class BaseMover : MonoBehaviour
 {
     [System.Serializable]
@@ -53,11 +51,11 @@ public abstract class BaseMover : MonoBehaviour
     }
 
     [Tooltip("The collider associated with this mover"),
-        SerializeField, VisibleOnly] private Collider _associatedCollider;
-    public Collider AssociatedCollider
+        SerializeField, VisibleOnly] private Collider _moverCollider;
+    public Collider MoverCollider
     {
-        get { return _associatedCollider; }
-        private set { _associatedCollider = value; }
+        get { return _moverCollider; }
+        private set { _moverCollider = value; }
     }
 
     [Tooltip("The change applied to the unit's position on that frame"),
@@ -89,14 +87,30 @@ public abstract class BaseMover : MonoBehaviour
     public Quaternion RotationSpeedQuaternion
     {
         get { return Quaternion.Euler(_rotationSpeed); }
-        set { _rotationSpeed = value.eulerAngles; }
+        protected set { _rotationSpeed = value.eulerAngles; }
+    }
+
+    [Tooltip("The maximum number of times to iterate through collider checks before moving on with each step"),
+        SerializeField] private byte _numColliderChecksPerStep = 5;
+    public byte NumColliderChecksPerStep
+    {
+        get { return _numColliderChecksPerStep; }
+        private set { _numColliderChecksPerStep = value; }
+    }
+
+    [Tooltip("Whether to reset speed after making contact with a wall on relevant axes" +
+        "\ndoes not play well with corners"),
+        SerializeField] private bool _resetSpeedOnBonk;
+    public bool ResetSpeedOnBonk
+    {
+        get { return _resetSpeedOnBonk; }
+        private set { _resetSpeedOnBonk = value; }
     }
 
     private void Awake()
     {
         MoverTransform = transform;
-        AssociatedCollider = GetComponent(typeof(Collider)) as Collider;
-        Application.targetFrameRate = 120;
+        MoverCollider = GetComponent(typeof(Collider)) as Collider;
     }
 
     /// <summary>
@@ -115,73 +129,82 @@ public abstract class BaseMover : MonoBehaviour
         newPosition += MoverTransform.up * MovementSpeed.y * Time.deltaTime;
         newPosition += MoverTransform.forward * MovementSpeed.z * Time.deltaTime;
 
-        Vector3 positionDifference = newPosition - MoverTransform.position;
-        RaycastHit[] collisions = CollisionRetrievers.GetCollisions(MoverTransform, AssociatedCollider, positionDifference.normalized, positionDifference.magnitude);
-        foreach (RaycastHit collision in collisions)
+        //did not move
+        if (newPosition == MoverTransform.position)
         {
-            if (collision.collider.gameObject.isStatic)
-            {
-                Vector3 newDirection;
-                float newDistance;
-                Physics.ComputePenetration(
-                    AssociatedCollider, 
-                    MoverTransform.position, 
-                    MoverTransform.rotation, 
-                    collision.collider, 
-                    collision.transform.position, 
-                    collision.transform.rotation, 
-                    out newDirection, 
-                    out newDistance);
-                newPosition = MoverTransform.position + newDirection * newDistance;
-                
-                break;
-            }
+            return;
         }
+
+        newPosition = StepAndCheckColliders(newPosition);
 
         MoverTransform.position = newPosition;
     }
-}
 
-
-//Scrapped code
-/*Vector3 positionDifference = newPosition - MoverTransform.position;
-        float distance = positionDifference.magnitude;
-
-        Vector3 closestCollisionInDirection = AssociatedCollider.ClosestPointOnBounds(MoverTransform.position + positionDifference.normalized);
-        Debug.DrawLine(MoverTransform.position, closestCollisionInDirection + positionDifference);
-
-        RaycastHit hit;
-        if (Physics.Raycast(closestCollisionInDirection, positionDifference.normalized, out hit, distance))
-        {
-            float offset = 0.001f;
-            Vector3 minisculePositionOffset = new Vector3(
-                positionDifference.x == 0 ? 0 : Mathf.Sign(positionDifference.x) * offset,
-                positionDifference.y == 0 ? 0 : Mathf.Sign(positionDifference.y) * offset,
-                positionDifference.z == 0 ? 0 :Mathf.Sign(positionDifference.z) * offset);
-
-
-            Vector3 difference = (closestCollisionInDirection - MoverTransform.position);
-            newPosition = (hit.point - difference) - minisculePositionOffset;
-        }
-        
-     private Vector3 GetNewPositionAdjustedForCollision(Vector3 positionDifference, RaycastHit collision)
+    private Vector3 StepAndCheckColliders(Vector3 newPosition)
     {
-        Vector3 closestCollisionInDirection = AssociatedCollider.ClosestPointOnBounds(collision.point);
-        Vector3 difference = (closestCollisionInDirection - MoverTransform.position);
-        Debug.Log(difference.magnitude);
+        for (int index = 0; index < NumColliderChecksPerStep; index++)
+        {
+            Collider[] colliders = CollisionRetrievers.GetColliderOverlap(MoverTransform.position, MoverCollider);
+            Vector3 newerPosition = DepenetrateFromColliderSet(newPosition, colliders);
 
-        debugSphere.position = collision.point;
-        debugSphere2.position = closestCollisionInDirection;
-        return collision.point - difference;// + GetMinisculePositionOffset(positionDifference);
+            newPosition = newerPosition;
+        }
+
+        return newPosition;
     }
 
-    private Vector3 GetMinisculePositionOffset(Vector3 positionDifference)
+    private Vector3 DepenetrateFromColliderSet(Vector3 newPosition, Collider[] colliders)
     {
-        float offset = 0.00001f;
-        Vector3 minisculePositionOffset = new Vector3(
-            positionDifference.x == 0 ? 0 : Mathf.Sign(positionDifference.x) * offset,
-            positionDifference.y == 0 ? 0 : Mathf.Sign(positionDifference.y) * offset,
-            positionDifference.z == 0 ? 0 : Mathf.Sign(positionDifference.z) * offset);
+        for (int colliderIndex = 0; colliderIndex < colliders.Length - 1; colliderIndex++)
+        {
+            Collider collider = colliders[colliderIndex];
+            newPosition = PreventJankIfCoordIsNearZero(DepenetrateFromCollider(newPosition, collider));
+        }
 
-        return minisculePositionOffset;
-    }*/
+        return newPosition;
+    }
+
+    private Vector3 DepenetrateFromCollider(Vector3 newPosition, Collider collider)
+    {
+        Vector3 newDirection;
+        float newDistance;
+        bool penetrated = Physics.ComputePenetration(
+            MoverCollider,
+            newPosition,
+            MoverTransform.rotation,
+            collider,
+            collider.transform.position,
+            collider.transform.rotation,
+            out newDirection,
+            out newDistance);
+
+        Vector3 depenetrationCorrection = newDirection * newDistance;
+        newPosition += depenetrationCorrection;
+        if (ResetSpeedOnBonk && penetrated)
+        {
+            ResetSpeedOnAxesThatHitWall(newDirection);
+        }
+        return newPosition;
+    }
+
+    private void ResetSpeedOnAxesThatHitWall(Vector3 forceOutAxes)
+    {
+        forceOutAxes = forceOutAxes.normalized;
+
+        MovementSpeed = new Vector3(forceOutAxes.x == 0 ? MovementSpeed.x : 0,
+                                    forceOutAxes.y == 0 ? MovementSpeed.y : 0,
+                                    forceOutAxes.z == 0 ? MovementSpeed.z : 0);
+    }
+
+    private Vector3 PreventJankIfCoordIsNearZero(Vector3 value)
+    {
+        return new Vector3(ConvertNearZeroToZero(value.x),
+                           ConvertNearZeroToZero(value.y),
+                           ConvertNearZeroToZero(value.z));
+    }
+
+    private float ConvertNearZeroToZero(float value)
+    {
+        return Mathf.Abs(value) >= 0.0000005f ? value : 0;
+    }
+}

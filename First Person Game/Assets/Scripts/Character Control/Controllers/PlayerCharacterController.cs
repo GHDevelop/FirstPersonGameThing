@@ -20,10 +20,10 @@ public class PlayerCharacterController : BaseController
     protected override void Update()
     {
         Vector3 movementInput = new Vector3(
-            (Input.GetKey(KeyCode.D) ? 1 : 0) - (Input.GetKey(KeyCode.A) ? 1 : 0),
+            Input.GetKey(KeyCode.D) ? 1 : (Input.GetKey(KeyCode.A) ? -1 : 0),
             0,
-            (Input.GetKey(KeyCode.W) ? 1 : 0) - (Input.GetKey(KeyCode.S) ? 1 : 0));
+            Input.GetKey(KeyCode.W) ? 1 : (Input.GetKey(KeyCode.S) ? -1 : 0));
 
-        Mover.Move(movementInput);
+        Mover.Move(movementInput.normalized);
     }
 }
