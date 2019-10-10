@@ -55,12 +55,19 @@ public class FirstPersonMover : BaseMover
 
     [Tooltip("All the speeds used by this mover"),
         SerializeField] private FirstPersonMovementSpeedSet _speeds;
+    /// <summary>
+    /// A collection of Speed, Acceleration, and Deceleration values for various different directions.
+    /// </summary>
     public FirstPersonMovementSpeedSet Speeds
     {
         get { return _speeds; }
         private set { _speeds = value; }
     }
 
+    /// <summary>
+    /// Gets the character's updated position, and then uses the <see cref="BaseMover"/>'s native methods to update its position
+    /// </summary>
+    /// <param name="input"></param>
     public override void Move(Vector3 input)
     {
         UpdateMovementSpeed(input);
@@ -68,6 +75,11 @@ public class FirstPersonMover : BaseMover
     }
 
     #region velocity
+    /// <summary>
+    /// Gets the updated movement speed.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
     protected virtual Vector3 UpdateMovementSpeed(Vector3 input)
     {
         Vector3 newMovementSpeed = new Vector3(GetSidewaysVelocity(input), GetVerticalVelocity(input), GetForwardVelocity(input));
@@ -124,6 +136,7 @@ public class FirstPersonMover : BaseMover
     /// <summary>
     /// Takes an acceleration, current speed on an axis, and min/max speed to calculate velocity.<br/>
     /// </summary>
+    /// <param name="inputAxis"></param>
     /// <param name="acceleration"></param>
     /// <param name="currentSpeed"></param>
     /// <param name="minSpeed"></param>

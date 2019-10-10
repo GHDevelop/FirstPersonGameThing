@@ -42,7 +42,7 @@ public abstract class BaseMover : MonoBehaviour
     [Tooltip("The transform of the attached object"),
         SerializeField, VisibleOnly] private Transform _moverTransform;
     /// <summary>
-    /// Transform of the mover's game object
+    /// <see cref="Transform"/> of the mover's game object
     /// </summary>
     public Transform MoverTransform
     {
@@ -52,6 +52,9 @@ public abstract class BaseMover : MonoBehaviour
 
     [Tooltip("The collider associated with this mover"),
         SerializeField, VisibleOnly] private Collider _moverCollider;
+    /// <summary>
+    /// The <see cref="Collider"/> used to calculate overlap with the player
+    /// </summary>
     public Collider MoverCollider
     {
         get { return _moverCollider; }
@@ -92,6 +95,9 @@ public abstract class BaseMover : MonoBehaviour
 
     [Tooltip("The maximum number of times to iterate through collider checks before moving on with each step"),
         SerializeField] private byte _numColliderChecksPerStep = 5;
+    /// <summary>
+    /// The number of colliders that will be checked when removing overlap after moving
+    /// </summary>
     public byte NumColliderChecksPerStep
     {
         get { return _numColliderChecksPerStep; }
@@ -101,6 +107,9 @@ public abstract class BaseMover : MonoBehaviour
     [Tooltip("Whether to reset speed after making contact with a wall on relevant axes" +
         "\ndoes not play well with corners"),
         SerializeField] private bool _resetSpeedOnBonk;
+    /// <summary>
+    /// Whether to reset speed on bonk
+    /// </summary>
     public bool ResetSpeedOnBonk
     {
         get { return _resetSpeedOnBonk; }
@@ -129,22 +138,21 @@ public abstract class BaseMover : MonoBehaviour
         newPosition += MoverTransform.up * MovementSpeed.y * Time.deltaTime;
         newPosition += MoverTransform.forward * MovementSpeed.z * Time.deltaTime;
 
-        //did not move
-        if (newPosition == MoverTransform.position)
-        {
-            return;
-        }
-
         newPosition = StepAndCheckColliders(newPosition);
 
         MoverTransform.position = newPosition;
     }
 
+    /// <summary>
+    /// Checks the updated position for any collisions, then adjusts the position to remove overlap.
+    /// </summary>
+    /// <param name="newPosition"></param>
+    /// <returns></returns>
     private Vector3 StepAndCheckColliders(Vector3 newPosition)
     {
         for (int index = 0; index < NumColliderChecksPerStep; index++)
         {
-            Collider[] colliders = CollisionRetrievers.GetColliderOverlap(MoverTransform.position, MoverCollider);
+            Collider[] colliders = CollisionRetrievers.GetColliderOverlap(newPosition, MoverCollider);
             Vector3 newerPosition = DepenetrateFromColliderSet(newPosition, colliders);
 
             newPosition = newerPosition;
@@ -153,6 +161,12 @@ public abstract class BaseMover : MonoBehaviour
         return newPosition;
     }
 
+    /// <summary>
+    /// Compares the position against a set of colliders and returns the offset position
+    /// </summary>
+    /// <param name="newPosition"></param>
+    /// <param name="colliders"></param>
+    /// <returns></returns>
     private Vector3 DepenetrateFromColliderSet(Vector3 newPosition, Collider[] colliders)
     {
         for (int colliderIndex = 0; colliderIndex < colliders.Length - 1; colliderIndex++)
@@ -164,6 +178,12 @@ public abstract class BaseMover : MonoBehaviour
         return newPosition;
     }
 
+    /// <summary>
+    /// Gets the new position offset to escape the collider.
+    /// </summary>
+    /// <param name="newPosition"></param>
+    /// <param name="collider"></param>
+    /// <returns></returns>
     private Vector3 DepenetrateFromCollider(Vector3 newPosition, Collider collider)
     {
         Vector3 newDirection;
@@ -187,6 +207,10 @@ public abstract class BaseMover : MonoBehaviour
         return newPosition;
     }
 
+    /// <summary>
+    /// Disables movement when the character bonks
+    /// </summary>
+    /// <param name="forceOutAxes"></param>
     private void ResetSpeedOnAxesThatHitWall(Vector3 forceOutAxes)
     {
         forceOutAxes = forceOutAxes.normalized;
@@ -196,6 +220,11 @@ public abstract class BaseMover : MonoBehaviour
                                     forceOutAxes.z == 0 ? MovementSpeed.z : 0);
     }
 
+    /// <summary>
+    /// When the global coordinates are too close to zero, the character's position will fluctuate when up against a wall. This removes that fluctuation
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
     private Vector3 PreventJankIfCoordIsNearZero(Vector3 value)
     {
         return new Vector3(ConvertNearZeroToZero(value.x),
@@ -203,8 +232,13 @@ public abstract class BaseMover : MonoBehaviour
                            ConvertNearZeroToZero(value.z));
     }
 
+    /// <summary>
+    /// Converts very small, yet non-zero values to zero. This prevents jittering when moving against a wall.
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
     private float ConvertNearZeroToZero(float value)
     {
-        return Mathf.Abs(value) >= 0.0000005f ? value : 0;
+        return Mathf.Abs(value) >= 0.000005f ? value : 0;
     }
 }

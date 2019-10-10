@@ -6,9 +6,9 @@ using UnityEngine;
 public static class CollisionRetrievers
 {
     /// <summary>
-    /// Gets all objects a <see cref="Collider"/> will hit when moving in a certain direction
+    /// Gets all objects a <see cref="Collider"/> will hit when moving in a certain direction. Currently only implemented for <see cref="CapsuleCollider"/>
     /// </summary>
-    /// <param name="colliderObject">The object that the <see cref="Collider"/> is attached to, as a <see cref="Transform"/></param>
+    /// <param name="colliderObject">The object that the <see cref="CapsuleCollider"/> is attached to, as a <see cref="Vector3"/> position</param>
     /// <param name="collider">The <see cref="Collider"/> that will be checked</param>
     /// <param name="direction">The direction that <see cref="Collider"/> will move in. 
     /// Can easily be gotten by using <see cref="Vector3.normalized"/> with the difference between the target and starting locations</param>
@@ -28,7 +28,7 @@ public static class CollisionRetrievers
     /// <summary>
     /// Gets all objects a <see cref="CapsuleCollider"/> will hit when moving in a certain direction
     /// </summary>
-    /// <param name="colliderObject">The object that the <see cref="CapsuleCollider"/> is attached to, as a <see cref="Transform"/></param>
+    /// <param name="colliderObject">The object that the <see cref="CapsuleCollider"/> is attached to, as a <see cref="Vector3"/> position</param>
     /// <param name="collider">The <see cref="CapsuleCollider"/> that will be checked</param>
     /// <param name="direction">The direction that <see cref="CapsuleCollider"/> will move in. 
     /// Can easily be gotten by using <see cref="Vector3.normalized"/> with the difference between the target and starting locations</param>
@@ -48,6 +48,12 @@ public static class CollisionRetrievers
         return hits;
     }
 
+
+    /// <summary>
+    /// Gets all objects a <see cref="Collider"/> will hit at a certain position. Currently only implemented for <see cref="CapsuleCollider"/>
+    /// </summary>
+    /// <param name="colliderObject">The object that the <see cref="CapsuleCollider"/> is attached to, as a <see cref="Vector3"/> position</param>
+    /// <param name="collider">The <see cref="Collider"/> that will be checked</param>
     public static Collider[] GetColliderOverlap(Vector3 colliderObject, Collider collider)
     {
         if (collider is CapsuleCollider)
@@ -58,6 +64,11 @@ public static class CollisionRetrievers
         return new Collider[0];
     }
 
+    /// <summary>
+    /// Gets all objects a <see cref="CapsuleCollider"/> will hit at a certain position
+    /// </summary>
+    /// <param name="colliderObject">The object that the <see cref="CapsuleCollider"/> is attached to, as a <see cref="Vector3"/> position</param>
+    /// <param name="collider">The <see cref="CapsuleCollider"/> that will be checked</param>
     public static Collider[] GetCapsuleOverlap(Vector3 colliderObject, CapsuleCollider collider)
     {
         Vector3 pointDistance = Vector3.up * (collider.height / 2 - collider.radius);
