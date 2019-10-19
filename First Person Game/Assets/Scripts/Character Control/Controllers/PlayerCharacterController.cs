@@ -23,14 +23,28 @@ public class PlayerCharacterController : BaseController
         private set { _cameraMover = value; }
     }
 
+    [Tooltip("A camera toggle used to toggle between multiple cameras"),
+        SerializeField, VisibleOnly] private CameraToggle _cameraToggle;
+    public CameraToggle CameraToggle
+    {
+        get { return _cameraToggle; }
+        private set { _cameraToggle = value; }
+    }
+
     private void Awake()
     {
         Mover = GetComponent(typeof(BaseMover)) as BaseMover;
         CameraMover = GetComponent(typeof(BaseCameraController)) as BaseCameraController;
+        CameraToggle = GetComponent(typeof(CameraToggle)) as CameraToggle;
     }
 
     protected override void Update()
     {
+        if (Input.GetKeyDown(KeyCode.E) && CameraToggle != null)
+        {
+            CameraToggle.AdvanceCurrentCamera();
+        }
+
         Vector3 cameraInput = new Vector3(
             -Input.GetAxis("Mouse Y"),
             Input.GetAxis("Mouse X"),

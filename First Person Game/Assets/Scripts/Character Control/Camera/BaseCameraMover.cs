@@ -13,11 +13,11 @@ public class BaseCameraController : MonoBehaviour
     }
 
     [Tooltip("The camera that the character will look through. Will be set automatically if not pre-configured"),
-        SerializeField] private Camera _eyes;
-    public Camera Eyes
+        SerializeField] private Camera _camera;
+    public Camera Camera
     {
-        get { return _eyes; }
-        private set { _eyes = value; }
+        get { return _camera; }
+        private set { _camera = value; }
     }
 
     [Tooltip("The transform to move when altering the camera. Will typically just be the camera, but can be set manually if a more complicated configuration is desired."),
@@ -36,6 +36,14 @@ public class BaseCameraController : MonoBehaviour
         private set { _maxYRotation = value; }
     }
 
+    [Tooltip("The speed the camera moves per second"),
+        SerializeField] private float _cameraSpeed = 300;
+    public float CameraSpeed
+    {
+        get { return _cameraSpeed; }
+        private set { _cameraSpeed = value; }
+    }
+
     [Tooltip("The current amount the camera is rotated"),
         SerializeField, VisibleOnly] private Vector3 _currentCameraRotation = Vector3.zero;
     public Vector3 CurrentCameraRotation
@@ -51,19 +59,19 @@ public class BaseCameraController : MonoBehaviour
     private void Awake()
     {
         CameraMoverTransform = transform;
-        if (Eyes == null)
+        if (Camera == null)
         {
-            Eyes = GetComponentInChildren(typeof(Camera)) as Camera;
+            Camera = GetComponentInChildren(typeof(Camera)) as Camera;
         }
         if (CameraTransform == null)
         {
-            CameraTransform = Eyes.transform;
+            CameraTransform = Camera.transform;
         }
     }
 
     public virtual void RotateCamera(Vector3 rotationDirection)
     {
-        CurrentCameraRotation += rotationDirection * 60 * Time.deltaTime;
+        CurrentCameraRotation += rotationDirection * CameraSpeed * Time.deltaTime;
         ApplyRotation();
     }
 
