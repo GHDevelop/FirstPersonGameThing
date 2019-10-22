@@ -67,4 +67,23 @@ public abstract class BaseCharacterController : BaseController
         Mover = GetComponent(typeof(BaseMover)) as BaseMover;
         CameraMover = GetComponent(typeof(BaseCameraMover)) as BaseCameraMover;
     }
+
+    protected virtual void UpdateMovementInput(Vector2 input)
+    {
+        Vector3 inputAsVector3 = new Vector3(input.x,
+                                             0,
+                                             input.y);
+
+        UpdateMovementInput(inputAsVector3);
+    }
+
+    protected virtual void UpdateMovementInput(Vector3 input)
+    {
+        MovementInput = input;
+    }
+
+    protected virtual void UpdateCameraInput(Vector2 input)
+    {
+        CameraInput = new Vector3(-input.y, input.x, 0);
+    }
 }

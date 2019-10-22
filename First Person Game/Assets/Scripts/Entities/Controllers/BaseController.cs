@@ -7,5 +7,5 @@ using UnityEngine;
 /// </summary>
 public abstract class BaseController : MonoBehaviour
 {
-    protected abstract void Update();
+    protected abstract void FixedUpdate();
 }

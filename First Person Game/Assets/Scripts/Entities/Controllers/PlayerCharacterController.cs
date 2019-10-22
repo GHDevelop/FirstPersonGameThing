@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// A controller based on <see cref="BaseCharacterController"/> that is used for player characters
@@ -20,39 +21,44 @@ public class PlayerCharacterController : BaseCharacterController
         private set { _cameraToggle = value; }
     }
 
+    InGameControls controls;
+
     protected override void Awake()
     {
         base.Awake();
         CameraToggle = GetComponent(typeof(CameraToggle)) as CameraToggle;
-    }
+        controls = new InGameControls();
 
-    /// <summary>
-    /// Collects Inputs for use with FixedUpdate, also toggles which camera is used, since that has no direct gameplay impact
-    /// </summary>
-    protected override void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.E) && CameraToggle != null)
-        {
-            CameraToggle.AdvanceCurrentCamera();
-        }
+        controls.Gameplay.Move.performed += context => UpdateMovementInput(context.ReadValue<Vector2>());
+        controls.Gameplay.Move.canceled += context => UpdateMovementInput(Vector3.zero);
 
-        CameraInput = new Vector3(
-            -Input.GetAxis("Mouse Y"),
-            Input.GetAxis("Mouse X"),
-            0);
+        controls.Gameplay.Look.performed += context => UpdateCameraInput(context.ReadValue<Vector2>());
+        controls.Gameplay.Look.canceled += context => UpdateCameraInput(Vector2.zero);
 
-        MovementInput = new Vector3(
-            Input.GetKey(KeyCode.D) ? 1 : (Input.GetKey(KeyCode.A) ? -1 : 0),
-            0,
-            Input.GetKey(KeyCode.W) ? 1 : (Input.GetKey(KeyCode.S) ? -1 : 0));
+        controls.Gameplay.ToggleCamera.performed += context => ToggleCamera();
     }
 
     /// <summary>
     /// Feeds input to the appropriate component
     /// </summary>
-    protected void FixedUpdate()
+    protected override void FixedUpdate()
     {
         CameraMover.RotateCamera(CameraInput);
-        Mover.Move(MovementInput.normalized);
+        Mover.Move(MovementInput);
+    }
+
+    private void OnEnable()
+    {
+        controls.Gameplay.Enable();
+    }
+
+    private void OnDisable()
+    {
+        controls.Gameplay.Disable();
+    }
+
+    private void ToggleCamera()
+    {
+        CameraToggle.AdvanceCurrentCamera();
     }
 }
