@@ -71,7 +71,7 @@ public abstract class BaseCharacterController : BaseController
     protected virtual void UpdateMovementInput(Vector2 input)
     {
         Vector3 inputAsVector3 = new Vector3(input.x,
-                                             0,
+                                             MovementInput.y,
                                              input.y);
 
         UpdateMovementInput(inputAsVector3);
@@ -84,6 +84,12 @@ public abstract class BaseCharacterController : BaseController
 
     protected virtual void UpdateCameraInput(Vector2 input)
     {
-        CameraInput = new Vector3(-input.y, input.x, 0);
+        Vector3 convertedInput = new Vector3(-input.y, input.x, 0);
+        UpdateCameraInput(convertedInput);
+    }
+
+    protected virtual void UpdateCameraInput(Vector3 input)
+    {
+        CameraInput = input;
     }
 }

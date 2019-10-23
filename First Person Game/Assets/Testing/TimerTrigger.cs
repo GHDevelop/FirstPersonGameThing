@@ -11,7 +11,7 @@ public class TimerTrigger : MonoBehaviour
 
     private void Awake()
     {
-        Application.targetFrameRate = 200;
+        Application.targetFrameRate = -1;
     }
 
     private void OnTriggerEnter(Collider other)

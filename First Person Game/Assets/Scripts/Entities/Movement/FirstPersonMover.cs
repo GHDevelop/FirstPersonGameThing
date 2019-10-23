@@ -150,7 +150,7 @@ public class FirstPersonMover : BaseMover
 
     /// <summary>
     /// Calculates acceleration for normal axes, where positive and negative directions use the same speed.
-    /// Acceleration is adjusted for frame rate here, so do not multiply it by <see cref="Time.deltaTime"/> prior
+    /// Acceleration is adjusted for frame rate here, so do not multiply it by <see cref="Time.fixedDeltaTime"/> prior
     /// </summary>
     /// <param name="inputOnAxis"></param>
     /// <param name="currentSpeedOnAxis"></param>
@@ -169,7 +169,7 @@ public class FirstPersonMover : BaseMover
 
     /// <summary>
     /// Calculates acceleration for abnormal axes, where positive and negative directions use different speed.
-    /// Acceleration is adjusted for frame rate here, so do not multiply it by <see cref="Time.deltaTime"/> prior
+    /// Acceleration is adjusted for frame rate here, so do not multiply it by <see cref="Time.fixedDeltaTime"/> prior
     /// </summary>
     /// <param name="inputOnAxis"></param>
     /// <param name="currentSpeedOnAxis"></param>
